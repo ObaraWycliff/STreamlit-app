@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 # App title & description
 st.set_page_config(page_title="Stat Generator", page_icon="📊", layout="centered")
 st.title("📊 Mean & Standard Deviation Generator")
-st.write("Enter **5 values (any decimal precision)** and generate **40 simulated values** with the same distribution.")
+st.write("Enter **5 values (any decimal precision, including trailing zeros)** and generate **40 simulated values** with the same distribution.")
 
 # Input section
 st.header("🔢 Input Values")
@@ -14,14 +14,14 @@ cols = st.columns(5)
 values = []
 
 for i, col in enumerate(cols):
-    # Removed format="%.3f" so any decimal precision is allowed
-    val = col.number_input(f"Value {i+1}", step=0.0001, key=f"val{i}")
+    # number_input now accepts any decimals (including trailing zeros like 1.040 or 0.030)
+    val = col.number_input(f"Value {i+1}", step=0.0001, format="%.4f", key=f"val{i}")
     values.append(val)
 
 # Only process if all 5 values are entered
 if st.button("✨ Generate Values"):
-    if any(v == 0 for v in values):  
-        st.warning("Please enter all 5 values (non-zero).")
+    if len(values) < 5:
+        st.warning("Please enter all 5 values.")
     else:
         # Mean & Std
         mean_val = np.mean(values)
