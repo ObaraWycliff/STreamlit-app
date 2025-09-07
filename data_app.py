@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from scipy.stats import truncnorm
 
 # ----------------- Page Config -----------------
 st.set_page_config(
@@ -13,7 +14,7 @@ st.set_page_config(
 st.title("📊 Whole Number to Fraction Generator")
 st.markdown("""
 Enter **5 whole numbers**. Each number will be **divided by 1000** to create fractions, and then **40 simulated values** will be generated from the same distribution.  
-All values are displayed in **0.001 format** for clarity.
+All values are displayed in **0.001 format** for clarity. Only positive values are generated.
 """)
 
 # ----------------- Input Section -----------------
@@ -45,9 +46,11 @@ if st.button("✨ Generate Values"):
 
         st.success(f"✅ Mean: **{mean_val:.4f}**, Standard Deviation: **{std_val:.4f}**")
 
-        # Generate 40 values
-        generated_values = np.random.normal(loc=mean_val, scale=std_val, size=40)
-        generated_values = [round(val, 4) for val in generated_values]  # 0.001 format
+        # ----------------- Generate positive 40 values -----------------
+        # a and b define the truncation (0 to +inf)
+        a, b = (0 - mean_val) / std_val, np.inf
+        generated_values = truncnorm.rvs(a, b, loc=mean_val, scale=std_val, size=40)
+        generated_values = [round(val, 4) for val in generated_values]
 
         # ----------------- Display Table -----------------
         df = pd.DataFrame(generated_values, columns=["Generated Values"])
