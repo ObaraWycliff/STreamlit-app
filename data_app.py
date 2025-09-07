@@ -2,52 +2,68 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 
-# App title & description
-st.set_page_config(page_title="Stat Generator", page_icon="📊", layout="centered")
-st.title("📊 Mean & Standard Deviation Generator")
-st.write("Enter **5 values (any decimal precision, including trailing zeros)** and generate **40 simulated values** with the same distribution.")
+# ----------------- Page Config -----------------
+st.set_page_config(
+    page_title="Advanced Number Generator",
+    page_icon="📊",
+    layout="wide"
+)
+st.title("📊 Whole Number to Fraction Generator")
+st.markdown("""
+Enter **5 whole numbers**. Each number will be **divided by 1000** to create fractions, and then **40 simulated values** will be generated from the same distribution.  
+All values are displayed in **0.001 format** for clarity.
+""")
 
-# Input section
-st.header("🔢 Input Values")
+# ----------------- Input Section -----------------
+st.header("🔢 Input Whole Numbers")
 cols = st.columns(5)
-values = []
+input_numbers = []
 
 for i, col in enumerate(cols):
-    # number_input now accepts any decimals (including trailing zeros like 1.040 or 0.030)
-    val = col.number_input(f"Value {i+1}", step=0.0001, format="%.4f", key=f"val{i}")
-    values.append(val)
+    num = col.number_input(
+        f"Number {i+1}", 
+        min_value=0, 
+        step=1, 
+        format="%d", 
+        key=f"num{i}"
+    )
+    input_numbers.append(num)
 
-# Only process if all 5 values are entered
+# Convert numbers to fractions
+fractions = [n / 1000 for n in input_numbers]
+
+# ----------------- Generate Values -----------------
 if st.button("✨ Generate Values"):
-    if len(values) < 5:
-        st.warning("Please enter all 5 values.")
+    if len(fractions) < 5:
+        st.warning("Please enter all 5 numbers.")
     else:
-        # Mean & Std
-        mean_val = np.mean(values)
-        std_val = np.std(values, ddof=1)
+        # Calculate mean & std
+        mean_val = np.mean(fractions)
+        std_val = np.std(fractions, ddof=1)
 
-        st.success(f"✅ Mean: **{mean_val:.4f}**,  Standard Deviation: **{std_val:.4f}**")
+        st.success(f"✅ Mean: **{mean_val:.4f}**, Standard Deviation: **{std_val:.4f}**")
 
-        # Generate values
+        # Generate 40 values
         generated_values = np.random.normal(loc=mean_val, scale=std_val, size=40)
-        generated_values = [round(val, 4) for val in generated_values]  # round to 4 decimals
+        generated_values = [round(val, 4) for val in generated_values]  # 0.001 format
 
-        # Convert to DataFrame
+        # ----------------- Display Table -----------------
         df = pd.DataFrame(generated_values, columns=["Generated Values"])
-
-        # Show table
         st.header("📋 Generated 40 Values")
         st.dataframe(df, use_container_width=True)
 
-        # Plot chart
+        # ----------------- Distribution Plot -----------------
         st.header("📈 Distribution of Generated Values")
-        fig, ax = plt.subplots()
-        ax.hist(generated_values, bins=10, edgecolor="black")
+        fig, ax = plt.subplots(figsize=(8, 4))
+        sns.histplot(generated_values, bins=10, kde=True, color='skyblue', ax=ax)
         ax.axvline(mean_val, color="red", linestyle="--", label=f"Mean = {mean_val:.4f}")
+        ax.set_xlabel("Values")
+        ax.set_ylabel("Frequency")
         ax.legend()
         st.pyplot(fig)
 
-        # Download option
+        # ----------------- Download Option -----------------
         csv = df.to_csv(index=False).encode('utf-8')
         st.download_button("⬇️ Download as CSV", data=csv, file_name="generated_values.csv", mime="text/csv")
